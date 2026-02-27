@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) //Disables CSRF
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-                        .requestMatchers("/home", "/game", "/game/pung", "/game/discard", "/game/chow", "/tilesDisplay", "/update", "/*.css").permitAll() //Sets which URLs are public
+                        .requestMatchers("/home", "/game", "/game/pung", "/game/discard", "/game/chow", "/tilesDisplay", "/update", "/images/**", "/startGame", "/*.css").permitAll() //Sets which URLs are public
                         //.requestMatchers("/admin").hasAnyRole("ADMIN") //Set which URLs can be accessed only by users with a role matching these
                         //.anyRequest().authenticated() //Any other URL requires the user to be logged in
                 )
