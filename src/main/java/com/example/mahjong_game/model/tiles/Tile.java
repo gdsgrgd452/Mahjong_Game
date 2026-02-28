@@ -51,7 +51,17 @@ public class Tile {
         this.justDiscarded = justDiscarded;
     }
 
-    int amountRemaining; //Amount of that tile not thrown out or displayed as part of a pung or chow in a players hand
+    int amountRemaining = 4; //Amount of that tile that are not thrown out or displayed as part of a pung or chow in a players hand
+    public int getAmountRemaining() {return amountRemaining;}
+    public void setAmountRemaining(int amountRemaining) {this.amountRemaining = amountRemaining;}
+
+    String imagePath; //In the format bamboo-6 for example to get the image
+    public String getImagePath() {
+        return imagePath;
+    }
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
 
     boolean placed;
     public boolean isPlaced() {
