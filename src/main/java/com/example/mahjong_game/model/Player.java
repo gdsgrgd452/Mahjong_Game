@@ -36,6 +36,14 @@ public class Player {
         this.password = password;
     }
 
+    private boolean isBot;
+    public boolean isBot() {
+        return isBot;
+    }
+    public void setBot(boolean isBot) {
+        this.isBot = isBot;
+    }
+
     private String role;
     public String getRole() {
         return role;
@@ -56,6 +64,14 @@ public class Player {
     public List<Integer> getTilesInActionToTake() { return tilesInActionToTake; }
     public void setTilesInActionToTake(List<Integer> tilesInActionToTake) {
         this.tilesInActionToTake = tilesInActionToTake;
+    }
+
+    Integer points;
+    public Integer getPoints() {
+        return points;
+    }
+    public void setPoints(Integer points) {
+        this.points = points;
     }
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL) //Links the game to the pungs it has
