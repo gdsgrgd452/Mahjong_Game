@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -24,6 +25,7 @@ public class GameStarter {
     private final HelperFunctions h;
     private final Actions actions;
     private final Checks checks;
+    Random r = new Random();
     private static final Logger logger = LoggerFactory.getLogger(GameStarter.class);
 
     @Autowired
@@ -36,34 +38,53 @@ public class GameStarter {
         this.checks = checks;
     }
     Game game;
-    List<Player> players;
     Player dealer;
 
-    public Game initialiseGame() {
+    public Game initialiseGame(Player playerToStartGame, boolean allBots, int botsCount) {
         logger.info("Initialising a new game...");
         game = gameService.createGame();
-        addPlayersToGame();
+        List<Player> players = createPlayersForGame(botsCount);
+        if (!allBots) players.add(playerToStartGame);
+        addPlayersToGame(players);
         createTiles();
-        pickDealer();
+        pickDealer(players);
         setFirstPlayer();
-        dealHandToEachPlayer();
+        dealHandToEachPlayer(players);
         giveDealerExtraTile();
         for (Player player : players) actions.findFlowers(game, player);
         checks.lookForSetsToDisplayFirstGo(game.getPlayersInGame());
+        game.setOngoing(true);
         game = gameService.saveGame(game);
         logger.info("Game initialised successfully");
         return game;
     }
 
-    private void addPlayersToGame() {
-        playerService.findAllPlayers().forEach(p -> gameService.addPlayer(game, p) );
-        players = playerService.findAllPlayers();
+    /**
+     * For creating pass and play/ Bot players for a game
+     */
+    private List<Player> createPlayersForGame(int botsCount) {
+        List<Player> players = new ArrayList<>();
+
+        for (int i = 1; i <= botsCount; i++) {
+            players.add(playerService.createPlayer("BOT" + i, true));
+        }
+        for (int i = 1; i < 4 - botsCount; i++) {
+            players.add(playerService.createPlayer("PASSANDPLAY" + i, false));
+        }
+        return players;
+    }
+
+    private void addPlayersToGame(List<Player> players) {
+        for (Player player : players) {
+            logger.info("Adding player {} to game", player.getUsername());
+            gameService.addPlayer(game, player);
+        }
     }
 
     private void createTiles() {
         // Suited (108 total > 3 suits * 9 numbers * 4 copies)
         List<String> suits = List.of("Bamboo", "Dots", "Characters");
-        createSubsetOfTiles("Suited", suits, 9, 4);
+        createSubsetOfTiles("Suited", suits, 3, 12);
 
         // Honor (28 total > 7 types * 4 copies)
         List<String> honors = List.of("North", "South", "East", "West", "Red", "Green", "White");
@@ -86,10 +107,8 @@ public class GameStarter {
         }
     }
 
-    private void pickDealer() {
-        List<Player> allPlayers = playerService.findAllPlayersByGame(game);
-        Random r = new Random();
-        dealer = allPlayers.get(r.nextInt(allPlayers.size()));
+    private void pickDealer(List<Player> players) {
+        dealer = players.get(r.nextInt(players.size()));
         game.setDealer(dealer);
     }
 
@@ -97,8 +116,10 @@ public class GameStarter {
         game.setCurrentPlayer(dealer);
     }
 
-    private void dealHandToEachPlayer() {
-        playerService.findAllPlayers().forEach(this::dealHand);
+    private void dealHandToEachPlayer(List<Player> players) {
+        for (Player player : players) {
+            dealHand(player);
+        }
     }
 
     private void dealHand(Player player) {
