@@ -5,8 +5,8 @@
 <html lang="en">
 <head>
     <title>Game</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/tilesDisplay.css" type="text/css"> <!-- Linking the css in -->
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/tableDisplay.css" type="text/css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tilesDisplay.css" type="text/css"> <!-- Linking the css in -->
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tableDisplay.css" type="text/css">
 </head>
 <body>
     <div class="game-container">
@@ -81,6 +81,8 @@
                         <button class="action-btn ${pActive}" onclick="sendPlayerAction(${player.playerId}, 'pung')">Pung</button>
                         <c:set var="cActive" value="${player.actionToTake == 'C' ? 'btn-active' : ''}" />
                         <button class="action-btn ${cActive}" onclick="sendPlayerAction(${player.playerId}, 'chow')">Chow</button>
+                        <c:set var="cActive" value="${player.actionToTake == 'W' ? 'btn-active' : ''}" />
+                        <button class="action-btn ${cActive}" onclick="sendPlayerAction(${player.playerId}, 'win')">Win</button>
                     </div>
                 </div>
             </c:forEach>

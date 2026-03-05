@@ -14,11 +14,27 @@
             body: formData
         }).then(async (response) => {
             if (response.ok) {
+                const contentType = response.headers.get("content-type") || "";
+
+                if (contentType.includes("application/json")) {
+                    const data = await response.json();
+
+                    if (data && data.status === "GAME_OVER" && data.redirectUrl) {
+                        window.location.href = baseUrl + data.redirectUrl;
+                        return;
+                    }
+                } else {
+                    await response.text().catch(() => {});
+                }
+
                 location.reload();
                 return;
             }
             const errorText = await response.text();
-            alert("Action failed: " + errorText);
+            if (!errorText.includes("Game is not ongoing")) {
+                alert("Action failed: " + errorText);
+                location.reload();
+            }
         });
     }
 
@@ -28,7 +44,14 @@
     }
 
     function sendPlayerAction(playerId, actionType) {
-        const url = actionType === "pung" ? "/game/pung" : "/game/chow";
+        let url
+        if (actionType === "pung") {
+            url = "/game/pung"
+        } else if (actionType === "chow") {
+            url = "/game/chow"
+        } else if (actionType === "win") {
+            url = "/game/win"
+        }
         return sendAction(url, { playerId: playerId, bot: false});
     }
 
@@ -65,15 +88,15 @@
         const playerWithActionExists = !!cfg.playerWithActionToTakeExists;
         const isActionPlayerBot = !!cfg.isPlayerWithActionToTakeBot;
 
-        // Case 1: Someone has a reaction action, and that someone is a bot -> bot should act NOW
+        // If a bot has an action it acts in the set timeframe
         if (playerWithActionExists && isActionPlayerBot) {
-            setTimeout(triggerBotAction, 3000);
+            setTimeout(triggerBotAction, 250);
             return;
         }
 
-        // Case 2: No reaction action pending; if it's bot's turn -> bot discards
+        // No action but is bot so discards tile in set timeframe
         if (isCurrentPlayerBot && !playerWithActionExists) {
-            setTimeout(triggerBotTurn, 3000);
+            setTimeout(triggerBotTurn, 250);
         }
     });
 
