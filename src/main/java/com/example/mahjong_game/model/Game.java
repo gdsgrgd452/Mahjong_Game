@@ -17,6 +17,14 @@ public class Game {
         this.gameId = gameId;
     }
 
+    private boolean ongoing;
+    public boolean isOngoing() {
+        return ongoing;
+    }
+    public void setOngoing(boolean ongoing) {
+        this.ongoing = ongoing;
+    }
+
     @OneToOne
     @JoinColumn(name = "dealer_id")
     private Player dealer;

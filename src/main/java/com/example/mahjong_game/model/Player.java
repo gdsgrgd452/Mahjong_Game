@@ -8,6 +8,8 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+//In-Game player and account functionality in 1
+
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE) // All players (incl bots) are in 1 table
 public class Player {
@@ -28,14 +30,6 @@ public class Player {
         this.username = username;
     }
 
-    private String password;
-    public String getPassword() {
-        return password;
-    }
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     private boolean isBot;
     public boolean isBot() {
         return isBot;
@@ -44,13 +38,6 @@ public class Player {
         this.isBot = isBot;
     }
 
-    private String role;
-    public String getRole() {
-        return role;
-    }
-    public void setRole(String role) {
-        this.role = role;
-    }
 
     String actionToTake;
     public String getActionToTake() {
@@ -64,6 +51,14 @@ public class Player {
     public List<Integer> getTilesInActionToTake() { return tilesInActionToTake; }
     public void setTilesInActionToTake(List<Integer> tilesInActionToTake) {
         this.tilesInActionToTake = tilesInActionToTake;
+    }
+
+    Integer wins;
+    public Integer getWins() {
+        return wins;
+    }
+    public void setWins(Integer wins) {
+        this.wins = wins;
     }
 
     Integer points;
@@ -123,7 +118,5 @@ public class Player {
     public void setGame(Game game) {
         this.game = game;
     }
-
-
 
 }
