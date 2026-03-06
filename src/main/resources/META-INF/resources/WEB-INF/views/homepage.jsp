@@ -1,20 +1,24 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Homepage</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dark-theme.css" type="text/css">
 </head>
 
 <body>
-<h1>Welcome</h1>
-<hr>
-<div class="navBar">
-    <ul>
-        <li>New Game</li>
-        <li>Account</li>
-    </ul>
+<div class="navbar">
+    <form action="${pageContext.request.contextPath}/startGame" method="get" class="button_padding">
+        <button type="submit" class="button">Start a new game</button>
+    </form>
+    <form action="${pageContext.request.contextPath}/logout" method="post" class="button_padding">
+        <button type="submit" class="button">Logout</button>
+    </form>
+
+    <form action="${pageContext.request.contextPath}/login" method="post" class="button_padding"> <!-- change to profile page -->
+        <button type="submit" class="button">Profile</button>
+    </form>
 </div>
-<p><a href="${pageContext.request.contextPath}/tilesDisplay">View tiles</a></p>
+<h1>Welcome to mahjong ${user.username}</h1>
 </body>
 </html>
