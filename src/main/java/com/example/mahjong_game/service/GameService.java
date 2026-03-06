@@ -56,7 +56,16 @@ public class GameService {
         try {
             return gameRepository.findFirstByGameId(1);
         } catch (Exception e) {
-            throw new GetFromDatabaseFailedException("Failed to add a new tile");
+            throw new GetFromDatabaseFailedException("Failed to find the first game in the database");
+        }
+    }
+
+    public void finishGame(Game game) {
+        try {
+            game.setOngoing(false);
+            gameRepository.save(game);
+        } catch (Exception e) {
+            throw new GameCreationFailedException("Failed to finish the game");
         }
     }
 
