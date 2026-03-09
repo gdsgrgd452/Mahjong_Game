@@ -39,6 +39,7 @@ public class GamePageController {
     private static final Logger logger = LoggerFactory.getLogger(GamePageController.class);
     private final GameFinisher gameFinisher;
     private static final ResponseEntity<String> gameFinishedMessage = ResponseEntity.status(403).body("Unauthorized: Game is not ongoing.");
+    private static final Map<String, String> gameDoneRedirect = Map.of("status", "GAME_OVER", "redirectUrl", "/gameOver");
 
     @Autowired
     public GamePageController(GameStarter gameStarter, TileService tileService, GameService gameService, PlayerService playerService, Discard discard, Checks checks, BotLogic botLogic, GameFinisher gameFinisher) {
@@ -81,7 +82,20 @@ public class GamePageController {
         model.addAttribute("isPlayerWithActionToTakeBot", playerWithActionToTake != null && playerWithActionToTake.isBot());
         model.addAttribute("currentPlayerId", currentGame.getCurrentPlayer().getPlayerId());
         model.addAttribute("isCurrentPlayerBot", currentGame.getCurrentPlayer().isBot());
-        return "game";
+        if (currentGame.isOngoing()) {
+            return "game";
+        } else {
+            return "redirect:/gameOver";
+        }
+    }
+    
+    @GetMapping("/gameOver")
+    public String serveGameOverPage(Model model) {
+        Game currentGame = gameService.findFirstGame();
+        List<Player> players = currentGame.getPlayersInGame(); 
+        model.addAttribute("players", players);
+        gameFinisher.getRidOfBotsAfterGame(currentGame);
+        return "gameOver";
     }
 
     @PostMapping("/game/discard")
@@ -101,14 +115,16 @@ public class GamePageController {
                 return ResponseEntity.status(403).body("Unauthorized: It is not your turn or you do not own this tile.");
             }
 
-            handleDiscard(currentGame, tile);
+            boolean gameOver = handleDiscard(currentGame, tile);
+            if (gameOver) {
+                return ResponseEntity.ok(gameDoneRedirect);
+            }
 
-            return ResponseEntity.ok("Tile discarded successfully");
+            return ResponseEntity.ok(Map.of("status", "OK", "message", "Tile discarded successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error processing discard: " + e.getMessage());
         }
     }
-
 
     @PostMapping("/game/botDiscard")
     @ResponseBody
@@ -121,7 +137,12 @@ public class GamePageController {
             if (currentGame.getCurrentPlayer().isBot()) {
                 Tile discardedTile = botLogic.discardATileWithLogic(currentGame.getCurrentPlayer());
                 logger.info("Bot discarding tile: {}, {}", discardedTile.getSuit(), discardedTile.getNumber());
-                handleDiscard(currentGame, discardedTile);
+
+                boolean gameOver = handleDiscard(currentGame, discardedTile);
+                if (gameOver) {
+                    return ResponseEntity.ok(gameDoneRedirect);
+                }
+
                 return ResponseEntity.ok(Map.of("status", "SUCCESS", "tileId", discardedTile.getTileId()));
             }
             return ResponseEntity.status(400).body("Current player is not a bot");
@@ -130,13 +151,15 @@ public class GamePageController {
         }
     }
 
-    public void handleDiscard(Game currentGame, Tile tile) {
+    public boolean handleDiscard(Game currentGame, Tile tile) {
         discard.discardTile(tile.getTileId());
 
-        Map<Player, String> playerAndActionMap = checks.lookForActionsAfterDiscard(currentGame.getPlayersInGame(), currentGame.getCurrentPlayer(), tile);
+        Map<Player, String> playerAndActionMap =
+                checks.lookForActionsAfterDiscard(currentGame.getPlayersInGame(), currentGame.getCurrentPlayer(), tile);
 
         if (!playerAndActionMap.isEmpty()) {
-            Map.Entry<Player, String> playerAndAction = playerAndActionMap.entrySet().iterator().next(); //Get an element from the map (Should only be 1)
+            Map.Entry<Player, String> playerAndAction =
+                    playerAndActionMap.entrySet().iterator().next(); //Get an element from the map (Should only be 1)
 
             Player playerWithAction = playerAndAction.getKey();
             String action = playerAndAction.getValue();
@@ -145,7 +168,7 @@ public class GamePageController {
                 logger.info("Bot win detected for {}.", playerWithAction.getUsername());
                 discard.whenSomeActionsFound(currentGame, playerWithAction, "W");
                 gameFinisher.finishGame(currentGame);
-                return;
+                return true;
             }
 
             playerWithAction.setActionToTake(action); //Sets action to P or C depending on action
@@ -153,6 +176,8 @@ public class GamePageController {
         } else {
             discard.whenNoActionsFound(currentGame);
         }
+
+        return false;
     }
 
     @PostMapping("/game/pung")
@@ -215,7 +240,6 @@ public class GamePageController {
         gameFinisher.finishGame(currentGame);
         return ResponseEntity.ok("win");
     }
-
 
     @GetMapping("/tilesDisplay")
     public String serveTilesDisplayPage(Model model) {
