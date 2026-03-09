@@ -8,15 +8,19 @@
 
 <body>
 <div class="navbar">
-    <form action="${pageContext.request.contextPath}/startGame" method="get" class="button_padding">
+    <form action="${pageContext.request.contextPath}/startGame" class="button_padding">
         <button type="submit" class="button">Start a new game</button>
     </form>
     <form action="${pageContext.request.contextPath}/logout" method="post" class="button_padding">
         <button type="submit" class="button">Logout</button>
     </form>
 
-    <form action="${pageContext.request.contextPath}/login" method="post" class="button_padding"> <!-- change to profile page -->
+    <form action="${pageContext.request.contextPath}/profile" method="post" class="button_padding"> <!-- change to profile page -->
         <button type="submit" class="button">Profile</button>
+    </form>
+
+    <form action="${pageContext.request.contextPath}/leaderboard" class="button_padding"> <!-- change to profile page -->
+        <button type="submit" class="button">Leaderboard</button>
     </form>
 </div>
 <h1>Welcome to mahjong ${user.username}</h1>
