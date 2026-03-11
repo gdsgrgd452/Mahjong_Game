@@ -3,6 +3,7 @@ package com.example.mahjong_game.logic;
 import com.example.mahjong_game.logic.util.ComparisonHelperFunctions;
 import com.example.mahjong_game.model.Game;
 import com.example.mahjong_game.model.Player;
+import com.example.mahjong_game.model.actions.Action;
 import com.example.mahjong_game.model.actions.Pung;
 import com.example.mahjong_game.model.tiles.FlowerTile;
 import com.example.mahjong_game.model.tiles.Tile;
@@ -33,12 +34,22 @@ public class GameFinisher {
     }
 
     public void finishGame(Game game) {
-        for (Player player : game.getPlayersInGame()) {
+        List<Player> players = game.getPlayersInGame();
+        for (Player player : players) {
             player.setPoints(calculatePoints(player));
             logger.info("Player {} has {} points", player.getUsername(), player.getPoints());
             playerService.savePlayer(player);
         }
         gameService.finishGame(game);
+    }
+
+    public void getRidOfBotsAfterGame(Game game) {
+        List<Player> players = game.getPlayersInGame();
+        for (Player player : players) {
+            if (player.isBot()) {
+                playerService.deletePlayer(player.getPlayerId());
+            }
+        }
     }
 
     public void noTilesLeft(Game game) {
@@ -49,7 +60,7 @@ public class GameFinisher {
 
     // Kong of Dragon tiles	1
     // Pung or kong of player’s Wind	1
-    // Pung or kong of the Wint of the round	1
+    // Pung or kong of the Wind of the round	1
     // Flower or Season of player’s Wind	1
     // Two Dragon pungs or kongs and a pair of another Dragon	4
     // Seven pairs	4
@@ -66,7 +77,7 @@ public class GameFinisher {
     private Integer calculatePoints(Player player) {
         List<String> dragonTypes = List.of("Green", "Red", "White");
 
-        List<Pung> pungs = player.getPungs();
+        List<Action> pungs = player.getActionsByType("Pung");
         List<Tile> currentHand = player.getCurrentHand();
         List<Tile> currentHandNoPlaced = player.getCurrentHandNoPlaced();
 
@@ -125,10 +136,10 @@ public class GameFinisher {
     /**
      * @return pungOfDragonTilesCount - 1 point for each pung which is made up of dragons
      */
-    private Integer pungsOfDragonTilesCheck(List<Pung> pungs, List<String> dragonTypes) {
+    private Integer pungsOfDragonTilesCheck(List<Action> pungs, List<String> dragonTypes) {
         Integer pungOfDragonTilesCount = 0;
 
-        for (Pung pung : pungs) {
+        for (Action pung : pungs) {
             for (String type : dragonTypes) {
                 if (pungTypeCheck(pung, type)) pungOfDragonTilesCount += 1;
             }
@@ -165,7 +176,7 @@ public class GameFinisher {
      * Returns 1 if there is only chows and no pungs, 0 otherwise
      */
     private Integer fullChowHandCheck(Player player) {
-        if (player.getPungs().isEmpty() && player.getChows().size() == 4) return 1;
+        if (player.getActionsByType("Pung").isEmpty() && player.getActionsByType("Chow").size() == 4) return 1;
         return 0;
     }
 
@@ -173,13 +184,13 @@ public class GameFinisher {
      * Returns 3 if there is only pungs and no chows, 0 otherwise
      */
     private Integer fullPungHandCheck(Player player) {
-        if (player.getChows().isEmpty() && player.getPungs().size() == 4) return 3;
+        if (player.getActionsByType("Chow").isEmpty() && player.getActionsByType("Pung").size() == 4) return 3;
         return 0;
     }
 
 
 
-    private boolean pungTypeCheck(Pung pung, String type) {
+    private boolean pungTypeCheck(Action pung, String type) {
         Tile firstTile = pung.getTiles().getFirst();
         return Objects.equals(firstTile.getSuit(), type);
     }
