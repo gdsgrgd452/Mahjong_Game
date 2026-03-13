@@ -26,7 +26,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                             .requestMatchers("/login", "/register", "/css/**").permitAll() //Public
-                            .requestMatchers("/game/**", "/home", "/startGame", "/js/game.js", "/images/**").hasAnyRole("USER", "ADMIN")
+                            .requestMatchers("/game/**", "/home", "/leaderboard", "/profile", "/startGame", "/js/game.js", "/images/**").hasAnyRole("USER", "ADMIN")
                             .requestMatchers("/admin").hasAnyRole("ADMIN") //Can access if they have the role
                             .anyRequest().authenticated() //Any other URL requires the user to be logged in
                 )
