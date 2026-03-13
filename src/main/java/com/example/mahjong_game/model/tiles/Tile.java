@@ -2,8 +2,7 @@ package com.example.mahjong_game.model.tiles;
 
 import com.example.mahjong_game.model.Game;
 import com.example.mahjong_game.model.Player;
-import com.example.mahjong_game.model.actions.Chow;
-import com.example.mahjong_game.model.actions.Pung;
+import com.example.mahjong_game.model.actions.Action;
 import jakarta.persistence.*;
 
 @Entity
@@ -80,22 +79,13 @@ public class Tile {
         this.game = game;
     }
 
-    @ManyToOne @JoinColumn(name = "pung_id")
-    private Pung pung;
-    public Pung getPung() {
-        return pung;
+    @ManyToOne @JoinColumn(name = "action_id")
+    private Action action;
+    public Action getAction() {
+        return action;
     }
-    public void setPung(Pung pung) {
-        this.pung = pung;
-    }
-
-    @ManyToOne @JoinColumn(name = "chow_id")
-    private Chow chow;
-    public Chow getChow() {
-        return chow;
-    }
-    public void setChow(Chow chow) {
-        this.chow = chow;
+    public void setAction(Action action) {
+        this.action = action;
     }
 
     @ManyToOne @JoinColumn(name = "player_id")
