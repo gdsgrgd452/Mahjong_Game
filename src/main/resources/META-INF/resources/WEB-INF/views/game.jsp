@@ -48,14 +48,31 @@
                 <c:set var="playerTurn" value="${player.playerId == currentPlayerId ? 'player-hand-turn' : ''}" />
                 <div class="player-hand ${playerTurn} ${actionToTake}">
                     <p class="playerId">${player.playerId}</p>
-                        <c:forEach items="${player.getCurrentHandNoPlaced()}" var="tile">
-                            <%-- Determine the base status class --%>
-                            <c:set var="inPungClass" value="${tile.pung != null ? 'tile-in-pung' : 'tile-active'}" />
-                            <%-- Appends tile-in-chow if it is in a chow --%>
-                            <c:set var="inChowClass" value="${tile.chow != null ? 'tile-in-chow' : ''}" />
-                            <%-- Appends 'tile-just-picked' if it was just picked --%>
-                            <c:set var="pickedClass" value="${tile.justPickedUp ? ' tile-just-picked' : ''}" />
-                            <button type="button" class="tile ${inPungClass} ${inChowClass} ${pickedClass}"
+
+                        <%-- Not placed tiles --%>
+                    <c:forEach items="${player.getCurrentHandNoPlaced()}" var="tile">
+
+                            <c:choose>
+                                <c:when test="${tile.action.actionType == 'Pung'}">
+                                    <c:set var="tileClass" value="tile-in-pung" />
+                                </c:when>
+
+                                <c:when test="${tile.action.actionType == 'Chow'}">
+                                    <c:set var="tileClass" value="tile-in-chow" />
+                                </c:when>
+
+                                <c:when test="${tile.action.actionType == 'Kong'}">
+                                    <c:set var="tileClass" value="tile-in-kong" />
+                                </c:when>
+
+                                <c:otherwise>
+                                    <c:set var="tileClass" value="tile-active" />
+                                    <%-- If it was just picked up--%>
+                                    <c:set var="pickedClass" value="${tile.justPickedUp ? ' tile-just-picked' : ''}" />
+                                </c:otherwise>
+                            </c:choose>
+
+                            <button type="button" class="tile ${tileClass} ${pickedClass}"
                                         data-tile-id="${tile.tileId}"
                                         data-amount-remaining="${tile.amountRemaining}"
                                         onclick="discardTile(this)">
@@ -65,9 +82,15 @@
                                 </c:if>
                             </button>
                         </c:forEach>
-                        <c:forEach items="${player.getCurrentHandPlaced()}" var="tile">
-                            <c:set var="inPungClass" value="${tile.pung != null ? 'tile-in-pung' : ''}" />
-                            <c:set var="inChowClass" value="${tile.chow != null ? 'tile-in-chow' : ''}" />
+
+                        <%-- Placed tiles --%>
+                    <c:forEach items="${player.getCurrentHandPlaced()}" var="tile">
+                            <c:if test="${tile.action != null}">
+                                <%-- Gives the tiles a different colour if they are in a placed action --%>
+                                <c:set var="inPungClass" value="${tile.action.actionType == 'Pung' ? 'tile-in-pung' : ''}" />
+                                <c:set var="inChowClass" value="${tile.action.actionType == 'Chow' ? 'tile-in-chow' : ''}" />
+                            </c:if>
+
                             <div class="tile tile-placed ${inPungClass} ${inChowClass}">
                                 <span class="suit-label">${tile.suit}</span>
                                 <c:if test="${tile.number != null && tile.number != 0}">
@@ -81,8 +104,8 @@
                         <button class="action-btn ${pActive}" onclick="sendPlayerAction(${player.playerId}, 'pung')">Pung</button>
                         <c:set var="cActive" value="${player.actionToTake == 'C' ? 'btn-active' : ''}" />
                         <button class="action-btn ${cActive}" onclick="sendPlayerAction(${player.playerId}, 'chow')">Chow</button>
-                        <c:set var="cActive" value="${player.actionToTake == 'W' ? 'btn-active' : ''}" />
-                        <button class="action-btn ${cActive}" onclick="sendPlayerAction(${player.playerId}, 'win')">Win</button>
+                        <c:set var="wActive" value="${player.actionToTake == 'W' ? 'btn-active' : ''}" />
+                        <button class="action-btn ${wActive}" onclick="sendPlayerAction(${player.playerId}, 'win')">Win</button>
                     </div>
                 </div>
             </c:forEach>
