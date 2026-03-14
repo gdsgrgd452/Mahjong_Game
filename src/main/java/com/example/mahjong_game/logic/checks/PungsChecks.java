@@ -3,10 +3,10 @@ package com.example.mahjong_game.logic.checks;
 import com.example.mahjong_game.logic.util.ComparisonHelperFunctions;
 import com.example.mahjong_game.logic.util.HelperFunctions;
 import com.example.mahjong_game.model.Player;
-import com.example.mahjong_game.model.actions.Pung;
+import com.example.mahjong_game.model.actions.Action;
 import com.example.mahjong_game.model.tiles.Tile;
+import com.example.mahjong_game.service.ActionService;
 import com.example.mahjong_game.service.PlayerService;
-import com.example.mahjong_game.service.PungService;
 import com.example.mahjong_game.service.TileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,22 +23,27 @@ public class PungsChecks {
 
     private final HelperFunctions h;
     private final PlayerService playerService;
-    private final PungService pungService;
+    private final ActionService actionService;
     private final TileService tileService;
     private final ComparisonHelperFunctions c;
     private static final Logger logger = LoggerFactory.getLogger(PungsChecks.class);
 
     @Autowired
-    public PungsChecks(HelperFunctions h, PlayerService playerService, PungService pungService, TileService tileService, ComparisonHelperFunctions c) {
+    public PungsChecks(HelperFunctions h, PlayerService playerService, ActionService actionService, TileService tileService, ComparisonHelperFunctions c) {
         this.h = h;
         this.playerService = playerService;
-        this.pungService = pungService;
+        this.actionService = actionService;
         this.tileService = tileService;
         this.c = c;
     }
 
+    /**
+     * Start of game and after random pickup check - scan the entire hand for any valid Pungs <br>
+     * This also saves the pung to the db
+     * @return the player if a valid pung is found and saved
+     */
     public Player lookForPungs(Player player, List<Tile> playerTiles) {
-        playerTiles = h.filterListOfTilesForNoPungOrChow(playerTiles); //Prevents overlaps with chows or other pungs
+        playerTiles = h.filterListOfTilesForNoAction(playerTiles); //Prevents overlaps with chows or other pungs
         Map<String, List<Tile>> grouped = c.groupTilesBySuitAndNumber(playerTiles);
         boolean validPungSaved = false;
 
@@ -61,7 +66,7 @@ public class PungsChecks {
      */
     public List<Tile> lookForPungsAfterDiscard(Player player, Tile tile) {
         List<Tile> playerTiles = h.simulateHandWithNewTileForChecks(player, tile);
-        playerTiles = h.filterListOfTilesForNoPungOrChow(playerTiles);
+        playerTiles = h.filterListOfTilesForNoAction(playerTiles);
         List<Tile> matchingTiles = playerTiles.stream().filter(t -> c.sameTypeNumberAndSuitCheck(t, tile)).toList();
 
         if (matchingTiles.size() >= 3) {
@@ -69,7 +74,7 @@ public class PungsChecks {
             pungTiles.add(matchingTiles.get(0));
             pungTiles.add(matchingTiles.get(1));
             pungTiles.add(tile);
-            if (!pungService.lookInPlayerForPungWithSameTiles(player, pungTiles)) {
+            if (!actionService.lookInPlayerForActionWithSameTiles(player, pungTiles, "Pung")) {
                 logger.info("Pung found for player after discard: {}", player.getUsername());
                 return pungTiles;
             }
@@ -79,12 +84,15 @@ public class PungsChecks {
 
     public boolean handlePung(Player player, List<Integer> pungTilesIds) {
         List<Tile> pungTiles = pungTilesIds.stream().map(tileService::findTileById).toList();
-        if (pungService.lookInPlayerForPungWithSameTiles(player, pungTiles)) {
+        if (actionService.lookInPlayerForActionWithSameTiles(player, pungTiles, "Pung")) {
             return false;
         }
-        Pung newPung = pungService.createPung();
-        for (Tile tile : pungTiles) newPung = pungService.addTileToPung(newPung.getPungId(), tile);
-        playerService.addPung(player.getPlayerId(), newPung);
+        Action newPung = actionService.createAction("Pung");
+        for (Tile tile : pungTiles) {
+            logger.info("Added tile to pung: {}", tile.getSuit());
+            newPung = actionService.addTileToAction(newPung.getId(), tile);
+        }
+        playerService.addAction(player.getPlayerId(), newPung);
         return true;
     }
 }
